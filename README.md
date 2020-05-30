@@ -34,6 +34,21 @@ To conveniently install them automatically with [anaconda](https://www.anaconda.
 conda env create -f if-net_env.yml
 conda activate if-net
 ```
+Meshlabserver is needed for rescale. 
+```
+sudo apt-get install meshlab
+```
+
+To use it on a screen-less server, xzvf is also needed.
+```
+sudo apt-get install xzvf
+```
+
+tk3dv is used. plese use pip to install it in if-net env
+```
+pip install git+https://github.com/drsrinathsridhar/tk3dv.git
+```
+
 
 Please clone the repository and navigate into it in your terminal, its location is assumed for all subsequent commands.
 

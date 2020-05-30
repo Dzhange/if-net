@@ -3,6 +3,7 @@ import models.data.voxelized_data_shapenet as voxelized_data
 from models import training
 import argparse
 import torch
+from tk3dv.ptTools import ptUtils
 
 # python train.py -posed -dist 0.5 0.5 -std_dev 0.15 0.05 -res 32 -batch_size 40 -m
 parser = argparse.ArgumentParser(
@@ -20,6 +21,7 @@ parser.add_argument('-batch_size' , default=30, type=int)
 parser.add_argument('-res' , default=32, type=int)
 parser.add_argument('-m','--model' , default='LocNet', type=str)
 parser.add_argument('-o','--optimizer' , default='Adam', type=str)
+parser.add_argument('--gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 
 try:
     args = parser.parse_args()
@@ -54,5 +56,9 @@ exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}'.format(  'PC' + str(args.pc_samples) if
                                        ''.join(str(e) +'_'for e in args.sample_sigmas),
                                                                 args.res,args.model)
 
-trainer = training.Trainer(net,torch.device("cuda"),train_dataset, val_dataset,exp_name, optimizer=args.optimizer)
+DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
+print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
+Device = ptUtils.setDevice(MainGPUID)
+
+trainer = training.Trainer(net,Device,train_dataset, val_dataset,exp_name, optimizer=args.optimizer)
 trainer.train_model(1500)

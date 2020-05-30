@@ -4,6 +4,7 @@ import numpy as np
 import argparse
 from models.generation import Generator
 from generation_iterator import gen_iterator
+from tk3dv.ptTools import ptUtils
 
 parser = argparse.ArgumentParser(
     description='Run generation'
@@ -23,6 +24,7 @@ parser.add_argument('-retrieval_res' , default=256, type=int)
 parser.add_argument('-checkpoint', type=int)
 parser.add_argument('-batch_points', default=1000000, type=int)
 parser.add_argument('-m','--model' , default='LocNet', type=str)
+parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 
 args = parser.parse_args()
 
@@ -54,8 +56,11 @@ exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}'.format(  'PC' + str(args.pc_samples) if
                                        ''.join(str(e) +'_'for e in args.sample_sigmas),
                                                                 args.res,args.model)
 
+DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
+print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
+Device = ptUtils.setDevice(MainGPUID)
 
-gen = Generator(net,0.5, exp_name, checkpoint=args.checkpoint ,resolution=args.retrieval_res, batch_points=args.batch_points)
+gen = Generator(net,0.5, exp_name, checkpoint=args.checkpoint, device=Device, resolution=args.retrieval_res, batch_points=args.batch_points)
 
 out_path = 'experiments/{}/evaluation_{}_@{}/'.format(exp_name,args.checkpoint, args.retrieval_res)
 

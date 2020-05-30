@@ -25,7 +25,7 @@ def voxelized_pointcloud_sampling(path):
         mesh = trimesh.load(off_path)
         point_cloud = mesh.sample(args.num_points)
 
-
+        
         occupancies = np.zeros(len(grid_points), dtype=np.int8)
 
         _, idx = kdtree.query(point_cloud)

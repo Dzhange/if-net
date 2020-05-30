@@ -86,9 +86,10 @@ class Trainer(object):
                 self.writer.add_scalar('val loss batch avg', val_loss, epoch)
 
 
-            for batch in train_data_loader:
+            for batch_id,batch in enumerate(train_data_loader):
                 loss = self.train_step(batch)
-                print("Current loss: {}".format(loss))
+                if batch_id % 20 == 0:
+                    print("Current loss: {}".format(loss))
                 sum_loss += loss
 
 
