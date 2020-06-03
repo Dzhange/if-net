@@ -6,7 +6,7 @@ import pickle
 import imp
 import trimesh
 import torch
-
+import glob
 
 
 class VoxelizedDataset(Dataset):
@@ -25,7 +25,9 @@ class VoxelizedDataset(Dataset):
         self.path = data_path
         self.split = np.load(split_file)
 
-        self.data = self.split[mode]
+        # self.data = self.split[mode]
+        self.data = glob.glob(data_path + '/*/*')
+
         self.res = res
 
         self.num_sample_points = num_sample_points
@@ -43,8 +45,9 @@ class VoxelizedDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        path = self.path + self.data[idx]
-
+        # path = self.path + self.data[idx]
+        path = self.data[idx]
+        # print(path)
         if not self.voxelized_pointcloud:
             occupancies = np.load(path + '/voxelization_{}.npy'.format(self.res))
             occupancies = np.unpackbits(occupancies)

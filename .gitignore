@@ -5,6 +5,8 @@ build/
 *.c
 /experiments/*
 /shapenet/data/*
+/shapenet/backup/*
+/BUFF/*
 *.cpp
 /trash/
 !.gitkeep

@@ -1,6 +1,12 @@
 import trimesh
 import numpy as np
-from .libmesh.inside_mesh import check_mesh_contains
+import sys,os
+
+FileDirPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(FileDirPath, '../'))
+sys.path.append(os.path.join(FileDirPath, '../data_processing'))
+
+from libmesh.inside_mesh import check_mesh_contains
 import math
 import os
 import glob

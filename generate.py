@@ -6,6 +6,7 @@ from models.generation import Generator
 from generation_iterator import gen_iterator
 from tk3dv.ptTools import ptUtils
 
+
 parser = argparse.ArgumentParser(
     description='Run generation'
 )
