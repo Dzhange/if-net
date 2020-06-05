@@ -83,13 +83,13 @@ First, the data is converted to the .off-format and scaled using
 ```
 python data_processing/convert_to_scaled_off.py
 ```
-The input data for Voxel Super-Resolution of voxels is created with
+### The input data for Voxel Super-Resolution of voxels is created with
 ```
 python data_processing/voxelize.py -res 32
 ```
 using `-res 32` for 32<sup>3</sup> and `-res 128` for 128<sup>3</sup> resolution.
 
-The input data for Point Cloud Completion is created with
+### The input data for Point Cloud Completion is created with
 ```
 python data_processing/voxelized_pointcloud_sampling.py -res 128 -num_points 300
 ```
