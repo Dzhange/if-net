@@ -38,9 +38,7 @@ class Generator(object):
 
     def generate_mesh(self, data):
 
-
         inputs = data['inputs'].to(self.device)
-
 
         logits_list = []
         for points in self.grid_points_split:

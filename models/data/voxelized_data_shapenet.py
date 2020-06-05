@@ -12,7 +12,7 @@ import glob
 class VoxelizedDataset(Dataset):
 
 
-    def __init__(self, mode, res = 32,  voxelized_pointcloud = False, pointcloud_samples = 3000, data_path = 'shapenet/data/', split_file = 'shapenet/split.npz',
+    def __init__(self, mode, res = 32,  voxelized_pointcloud = False, train=True,pointcloud_samples = 3000, data_path = 'shapenet/data/', split_file = 'shapenet/split.npz',
                  batch_size = 64, num_sample_points = 1024, num_workers = 12, sample_distribution = [1], sample_sigmas = [0.015], **kwargs):
 
         self.sample_distribution = np.array(sample_distribution)
@@ -24,7 +24,7 @@ class VoxelizedDataset(Dataset):
 
         self.path = data_path
         self.split = np.load(split_file)
-
+        self.train = train
         # self.data = self.split[mode]
         self.data = glob.glob(data_path + '/*/*')
 
@@ -60,23 +60,31 @@ class VoxelizedDataset(Dataset):
         points = []
         coords = []
         occupancies = []
+        if self.train:
+            for i, num in enumerate(self.num_samples):
+                boundary_samples_path = path + '/boundary_{}_samples.npz'.format(self.sample_sigmas[i])
+                boundary_samples_npz = np.load(boundary_samples_path)
+                boundary_sample_points = boundary_samples_npz['points']
+                boundary_sample_coords = boundary_samples_npz['grid_coords']
+                boundary_sample_occupancies = boundary_samples_npz['occupancies']
+                subsample_indices = np.random.randint(0, len(boundary_sample_points), num)
+                points.extend(boundary_sample_points[subsample_indices])
+                coords.extend(boundary_sample_coords[subsample_indices])
+                occupancies.extend(boundary_sample_occupancies[subsample_indices])
 
-        for i, num in enumerate(self.num_samples):
-            boundary_samples_path = path + '/boundary_{}_samples.npz'.format(self.sample_sigmas[i])
-            boundary_samples_npz = np.load(boundary_samples_path)
-            boundary_sample_points = boundary_samples_npz['points']
-            boundary_sample_coords = boundary_samples_npz['grid_coords']
-            boundary_sample_occupancies = boundary_samples_npz['occupancies']
-            subsample_indices = np.random.randint(0, len(boundary_sample_points), num)
-            points.extend(boundary_sample_points[subsample_indices])
-            coords.extend(boundary_sample_coords[subsample_indices])
-            occupancies.extend(boundary_sample_occupancies[subsample_indices])
+            assert len(points) == self.num_sample_points
+            assert len(occupancies) == self.num_sample_points
+            assert len(coords) == self.num_sample_points
 
-        assert len(points) == self.num_sample_points
-        assert len(occupancies) == self.num_sample_points
-        assert len(coords) == self.num_sample_points
-
-        return {'grid_coords':np.array(coords, dtype=np.float32),'occupancies': np.array(occupancies, dtype=np.float32),'points':np.array(points, dtype=np.float32), 'inputs': np.array(input, dtype=np.float32), 'path' : path}
+            return {
+                    'grid_coords':np.array(coords, dtype=np.float32),
+                    'occupancies': np.array(occupancies, dtype=np.float32),
+                    'points':np.array(points, dtype=np.float32),
+                    'inputs': np.array(input, dtype=np.float32),
+                    'path' : path
+                    }
+        
+        return {'inputs': np.array(input, dtype=np.float32),'path' : path}
 
     def get_loader(self, shuffle =True):
 

@@ -19,12 +19,9 @@ def voxelized_pointcloud_sampling(path):
         if os.path.exists(out_file):
             print('File exists. Done.')
             return
-        off_path = path + '/isosurf_scaled.off'
 
-
-        mesh = trimesh.load(off_path)
-        point_cloud = mesh.sample(args.num_points)
-        print(point_cloud.shape)
+        pc_path = path + '/nocs_pc_scaled.npy'
+        point_cloud = np.load(pc_path)
         
         occupancies = np.zeros(len(grid_points), dtype=np.int8)
 
@@ -33,11 +30,7 @@ def voxelized_pointcloud_sampling(path):
 
         compressed_occupancies = np.packbits(occupancies)
 
-        # np.savez(out_file, point_cloud=point_cloud, 
-        #   compressed_occupancies = compressed_occupancies, 
-        #   bb_min = bb_min, bb_max = bb_max, 
-        #   res = args.res)
-
+        np.savez(out_file, point_cloud=point_cloud, compressed_occupancies = compressed_occupancies, bb_min = bb_min, bb_max = bb_max, res = args.res)
         print('Finished {}'.format(path))
 
     except Exception as err:
@@ -52,7 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('-num_points', type=int)
 
     args = parser.parse_args()
-
+    
     bb_min = -0.5
     bb_max = 0.5
 
