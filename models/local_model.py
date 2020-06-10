@@ -11,6 +11,7 @@ import torch.nn.functional as F
 
 # ShapeNet Voxel Super-Resolution --------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
+GPUnum = 3
 class ShapeNet32Vox(nn.Module):
 
     def __init__(self, hidden_dim=256):
@@ -46,7 +47,7 @@ class ShapeNet32Vox(nn.Module):
                 input[x] = y * displacment
                 displacments.append(input)
 
-        self.displacments = torch.Tensor(displacments).cuda(2)
+        self.displacments = torch.Tensor(displacments).cuda(GPUnum)
 
     def forward(self, p, x):
         x = x.unsqueeze(1)
@@ -130,7 +131,7 @@ class ShapeNet128Vox(nn.Module):
                 input[x] = y * displacment
                 displacments.append(input)
 
-        self.displacments = torch.Tensor(displacments).cuda(2)
+        self.displacments = torch.Tensor(displacments).cuda(GPUnum)
 
     def forward(self, p, x):
         x = x.unsqueeze(1)
@@ -231,7 +232,7 @@ class ShapeNetPoints(nn.Module):
                 input[x] = y * displacment
                 displacments.append(input)
 
-        self.displacments = torch.Tensor(displacments).cuda(2)
+        self.displacments = torch.Tensor(displacments).cuda(GPUnum)
 
     def forward(self, p, x):
         x = x.unsqueeze(1)
@@ -336,7 +337,7 @@ class SVR(nn.Module):
                 input[x] = y * displacment
                 displacments.append(input)
 
-        self.displacments = torch.Tensor(displacments).cuda(2)
+        self.displacments = torch.Tensor(displacments).cuda(GPUnum)
 
     def forward(self, p, x):
         x = x.unsqueeze(1)

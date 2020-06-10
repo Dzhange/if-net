@@ -69,7 +69,7 @@ class Trainer(object):
             print('Start epoch {}'.format(epoch))
             train_data_loader = self.train_dataset.get_loader()
 
-            if epoch % 5 == 0:
+            if epoch % 1 == 0:
                 self.save_checkpoint(epoch)
                 val_loss = self.compute_val_loss()
 

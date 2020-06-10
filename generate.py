@@ -25,7 +25,7 @@ parser.add_argument('-retrieval_res' , default=256, type=int)
 parser.add_argument('-checkpoint', type=int)
 parser.add_argument('-batch_points', default=1000000, type=int)
 parser.add_argument('-m','--model' , default='LocNet', type=str)
-parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
+parser.add_argument('--gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 
 args = parser.parse_args()
 
