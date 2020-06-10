@@ -3,7 +3,7 @@ from scipy.spatial import cKDTree as KDTree
 import numpy as np
 import trimesh
 from glob import glob
-import os,sys
+import os,sys,shutil
 import multiprocessing as mp
 from multiprocessing import Pool
 import argparse
@@ -18,7 +18,6 @@ import skimage.io as sio
 import time
 
 ROOT = 'shapenet/data/'
-
 # This file takes uni-scaled isosurface mesh as input, and output a sampled point,
 # directly from mesh. 
 # Here we use the pyRender to perform depth culling，get partial point cloud.
@@ -34,7 +33,6 @@ def voxelized_pointcloud_sampling(path):
                 return
         off_path = path + '/isosurf_scaled.off'
 
-
         # mesh = trimesh.load(off_path)
         # point_cloud = mesh.sample(args.num_points)
         V, F = objloader.LoadOff(off_path)
@@ -47,7 +45,7 @@ def voxelized_pointcloud_sampling(path):
         
         cam2world = np.array([[ 0.85408425,  0.31617427, -0.375678  ,  0.56351697 * 2],
             [ 0.        , -0.72227067, -0.60786998,  0.91180497 * 2],
-            [-0.52013469,  0.51917219, -0.61688   ,  0.92532003 * 2],
+            [-0.52013469,  0.51917219, -0.61688   ,  0.92532003 * 2+3],
             [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)
 
         world2cam = np.linalg.inv(cam2world).astype('float32')
@@ -76,15 +74,15 @@ def voxelized_pointcloud_sampling(path):
         # visible_faces = visible_faces[faces_valid]
         
         
+        # for visualization
+        # vis_face = findices.astype('float32') / np.max(findices)
+        # sio.imsave(path + '/face.png',vis_face)
+        # sio.imsave(path + '/vertex.png',vweights)
+        # return num_visible
 
         if num_visible < args.num_points:
             print("visible_num is ",num_visible)
             raise Exception
-                # for visualization
-        vis_face = findices.astype('float32') / np.max(findices)
-        sio.imsave(path + '/face.png',vis_face)
-        sio.imsave(path + '/vertex.png',vweights)
-        
         sample_idx = np.random.choice(num_visible,args.num_points,replace=False)
         valid_indices = visible_indices[sample_idx]
         point_cloud = V[valid_indices]
@@ -136,10 +134,10 @@ if __name__ == '__main__':
     # parser.add_argument('-sigma', type=float)
 
     args = parser.parse_args()
-
+    MIN_NUM = 99999
     bb_min = -0.5
     bb_max = 0.5
-
+    min_num = 999999
     grid_points = iw.create_grid_points_from_bounds(bb_min, bb_max, args.res)
     kdtree = KDTree(grid_points)
 
@@ -147,7 +145,5 @@ if __name__ == '__main__':
     paths = glob(ROOT + '/*/*/')
     # enabeling to run te script multiple times in parallel: shuffling the data
     random.shuffle(paths)
-    # p.map(voxelized_pointcloud_sampling, paths)
-    pt = "./shapenet/data/handsOnly_testDataset_REGISTRATIONS/01_01r"
-    # pt = "/ZG/if-net/shapenet/data/handsOnly_testDataset_REGISTRATIONS/01"
-    voxelized_pointcloud_sampling(pt)
+    p.map(voxelized_pointcloud_sampling, paths)
+    # voxelized_pointcloud_sampling('/home/lky/ZG/GuibasLab/if-net/shapenet/data/train/01_01r')

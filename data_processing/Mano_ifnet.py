@@ -24,9 +24,6 @@ def create_folders(path):
         target_name = os.path.join(dir_name, file_name)
         shutil.move(path, target_name)
     
-
-
-
 def close_hole_densify_to_off(path):
     
     output_file =os.path.join(path, 'isosurf.off')
@@ -81,7 +78,7 @@ if __name__ == '__main__':
     all_objs = glob.glob( INPUT_PATH + '/*')
     p = Pool(mp.cpu_count())
 
-    # p.map(create_folders, all_objs)
+    p.map(create_folders, all_objs)
 
     p.map(close_hole_densify_to_off, glob.glob(INPUT_PATH + '/*'))
 
