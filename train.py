@@ -61,4 +61,4 @@ print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
 Device = ptUtils.setDevice(MainGPUID)
 
 trainer = training.Trainer(net,Device,train_dataset, val_dataset,exp_name, optimizer=args.optimizer)
-trainer.train_model(1500)
+trainer.train_model(20)

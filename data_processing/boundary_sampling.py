@@ -13,13 +13,17 @@ ROOT = 'shapenet/data'
 
 def boundary_sampling(path):
     try:
-
-        if os.path.exists(path +'/boundary_{}_samples.npz'.format(args.sigma)):
-            return
-
-        off_path = path + '/isosurf_scaled.off'
         out_file = path +'/boundary_{}_samples.npz'.format(args.sigma)
 
+        if os.path.exists(out_file):
+            if args.write_over:
+                print('overwrite ', out_file)
+            else:
+                print('File exists. Done.')
+                return
+
+        off_path = path + '/isosurf_scaled.off'
+        
         mesh = trimesh.load(off_path)
         points = mesh.sample(sample_num)
 
@@ -42,7 +46,8 @@ if __name__ == '__main__':
         description='Run boundary sampling'
     )
     parser.add_argument('-sigma', type=float)
-
+    parser.add_argument('-write_over',type=bool,default=True)
+    
     args = parser.parse_args()
 
 
