@@ -1,4 +1,4 @@
-import os
+import os,sys
 import glob
 import multiprocessing as mp
 from multiprocessing import Pool
@@ -6,27 +6,27 @@ import trimesh
 import shutil
 import argparse
 
-# INPUT_PATH = '/home/lky/ZG/GuibasLab/data/Mano/handsOnly_REGISTRATIONS_r_l'
-INPUT_PATH = '/ZG/if-net/shapenet/data/handsOnly_testDataset_REGISTRATIONS/'
-script_path = "./data_processing/mano_closehole_densify.mlx"
 
-def create_folders(path):
+output_dir = None
+script_path = None
 
-    if not os.path.isfile(path) or path[-3:] != "ply":  
+def create_folders(mesh_path):
+
+    if not os.path.isfile(mesh_path) or mesh_path[-3:] != "ply":  
         return
 
-    file_name = os.path.basename(path)
+    file_name = os.path.basename(mesh_path)
     file_prefix = file_name.split('.')[0]
-    dir_name = os.path.join(INPUT_PATH, file_prefix)
+    dir_name = os.path.join(output_dir, file_prefix)
 
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
         target_name = os.path.join(dir_name, file_name)
-        shutil.move(path, target_name)
+        shutil.move(mesh_path, target_name)
     
-def close_hole_densify_to_off(path):
+def close_hole_densify_to_off(dir_path):
     
-    output_file =os.path.join(path, 'isosurf.off')
+    output_file =os.path.join(dir_path, 'isosurf.off')
     
     if os.path.exists(output_file):
         if args.write_over:
@@ -35,7 +35,7 @@ def close_hole_densify_to_off(path):
             print('File exists. Done.')
             return
 
-    input_file  = os.path.join(path, os.path.basename(path) +'.ply')
+    input_file  = os.path.join(dir_path, os.path.basename(dir_path) +'.ply')
     print("input file is ",input_file)    
 
     cmd = 'xvfb-run -a -s "-screen 0 800x600x24" meshlabserver -i {} -o {} -s {}'.format(input_file,output_file,script_path)
@@ -65,21 +65,31 @@ def scale(path):
     print('Finished {}'.format(path))
 
 
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='Run point cloud sampling'
+        description='Close hole, densify, and convert to .off format for Mano dataset'
     )
 
-    parser.add_argument('-write_over',type=bool)
+    parser.add_argument('--write-over',default=False,type=bool,help="Overwrite previous results if set to True")
+    parser.add_argument('--input-dir',default='./shapenet/data/train_raw/', help='Provide the input directory where datasets are stored.(Mano/)')
+    parser.add_argument('--output-dir',default='./shapenet/data/train' ,help='Provide the output directory where the processed Mano Model(in .off format would be stored)')
+    parser.add_argument('--script-path', default="./data_processing/closehole_densify_iter3.mlx")
     args = parser.parse_args()
 
-    all_objs = glob.glob( INPUT_PATH + '/*')
+    output_dir = args.output_dir
+    script_path = args.script_path
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    if not os.path.exists(script_path):
+        print("[ERROR] No Usable Script found")
+        sys.exit()
+
+    all_input = glob.glob( os.path.join(args.input_dir,'*'))
+    
     p = Pool(mp.cpu_count())
 
-    p.map(create_folders, all_objs)
+    p.map(create_folders, all_input)
 
-    p.map(close_hole_densify_to_off, glob.glob(INPUT_PATH + '/*'))
+    p.map(close_hole_densify_to_off, glob.glob(args.output_dir + '/*'))
 
-    p.map(scale, glob.glob( INPUT_PATH + '/*'))
+    p.map(scale, glob.glob(args.output_dir + '/*'))

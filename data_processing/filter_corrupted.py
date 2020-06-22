@@ -22,15 +22,17 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-file', type=str)
 parser.add_argument('-delete', action='store_true')
+parser.add_argument('-input-dir',type=str,default='shapenet/data/')
 parser.set_defaults(delete=False)
 
-file = parser.parse_args().file
-delete = parser.parse_args().delete
+args = parser.parse_args()
+file = args.file
+delete = args.delete
 
-ROOT = 'shapenet/data/'
+# ROOT = 'shapenet/data/'
 
 p = Pool(mp.cpu_count())
-p.map(filter, glob.glob(ROOT + '/*/*/'))
+p.map(filter, glob.glob(os.path.join(args.input_dir, '*/*/')))
 
 def update_split():
 

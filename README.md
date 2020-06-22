@@ -68,7 +68,7 @@ cd ../..
 
 Pretrained models will be mada availiable on June 8th.
 
-## Data Preparation
+## ShapeNet Data Preparation
 The full prepared data will take up 800 GB in total. Download the [ShapeNet](https://www.shapenet.org/) data preprocessed by [Xu et. al. NeurIPS'19] from [here](https://drive.google.com/drive/folders/1QGhDW335L7ra31uw5U-0V7hB-viA0JXr)
 into the `shapenet` folder.
 
@@ -77,7 +77,6 @@ Now extract the files into `shapenet\data` with:
 ```
 ls shapenet/*.tar.gz |xargs -n1 -i tar -xf {} -C shapenet/data/
 ```
-
 Next, the inputs and training point samples for IF-Nets are created. The following three commands can be run in parallel on multiple machines to significantly increase speed.
 First, the data is converted to the .off-format and scaled using
 ```
@@ -102,10 +101,12 @@ python data_processing/boundary_sampling.py -sigma 0.01
 ```
 where `-sigma` specifies the standard deviation of the normally distributed displacements added onto surface samples.
 
+### Filter Corrrupted data
 In order to remove meshes that could not be preprocessed (should not be more than around 15 meshes) you should run
 ```
 python data_processing/filter_corrupted.py -file 'voxelization_32.npy' -delete
 ```
+### Visulization
 The input data can be visualized by converting them to .off-format using
 ```
 python data_processing/create_voxel_off.py -res 32
@@ -115,6 +116,48 @@ for voxel input and
 python data_processing/create_pc_off.py -res 128 -num_points 300
 ```
 where `-res` and `-num_points` matches the values from the previous steps.
+
+## Mano dataset preparation
+
+### Data structure
+
+The origin version saves data in `shapenet` folder, but here the data comes from external dataset, so we need to provide the location for the dataset
+Also, all the data for each subject are kept in one folder. This helps us organize the data since there are many different kinds of 3d representations. 
+Here we keep this setting.
+
+### Densify the mesh and close holes
+As Mano dataset consists of meshes with around 700 vertices, and a big hole at the wrist
+First, run
+```
+python data_processing/mano_prepare.py --input-dir MANO_DATASET_FOLDER --output-dir OUTPUT_FOLDER 
+```
+2 scripts are provided in `/data_processing`, the difference is the iterations of mesh densify. Default is 3 iters.
+This would yield normally scaled, densified, hole-closed mesh in .off format, stored in `OUTPUT_FOLDER`
+
+
+### Generate Input for Reconstruction
+
+#### For point cloud sampling over the whole mesh
+```
+python data_processing/voxelized_pointcloud_sampling.py -res 128 -num_points 300 -input-dir MANO_DATASET_FOLDER
+```
+using `-num_points 300` for point clouds with 300 points and `-num_points 3000` for 3000 points.
+
+#### For partial point cloud sampling, SIMULATE Single View Reconstruction
+```
+python data_processing/partial_pointclouod_sampling.py.py -res 128 -num_points 300 -input-dir PROCESSED_MANO_DATASET_FOLDER
+```
+
+Training input points and the corresponding ground truth occupancy values are generated with
+```
+python data_processing/boundary_sampling.py -sigma 0.1
+python data_processing/boundary_sampling.py -sigma 0.01
+```
+where `-sigma` specifies the standard deviation of the normally distributed displacements added onto surface samples.
+
+### Filtering and Visulization
+
+Similar to above in Shapenet case, only difference is you have to specify the input folder.
 
 ## Training
 The training of IF-Nets is started running

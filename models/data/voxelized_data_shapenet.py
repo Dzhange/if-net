@@ -26,7 +26,7 @@ class VoxelizedDataset(Dataset):
         self.split = np.load(split_file)
         self.train = train
         # self.data = self.split[mode]
-        self.data = glob.glob(data_path + '/*/*')
+        self.data = glob.glob(data_path + '/*')
 
         self.res = res
 

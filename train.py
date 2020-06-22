@@ -21,7 +21,11 @@ parser.add_argument('-batch_size' , default=30, type=int)
 parser.add_argument('-res' , default=32, type=int)
 parser.add_argument('-m','--model' , default='LocNet', type=str)
 parser.add_argument('-o','--optimizer' , default='Adam', type=str)
-parser.add_argument('--gpu', default=0, type=int, choices=range(-1,8), nargs='+')
+parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
+parser.add_argument('-name', default='', type=str)
+parser.add_argument('-epochs', default=200, type=int)
+parser.add_argument('-input-dir-train', default='shapenet/data/train', type=str)
+parser.add_argument('-input-dir-val', default='shapenet/data/val', type=str)
 
 try:
     args = parser.parse_args()
@@ -43,26 +47,22 @@ if args.model == 'SVR':
 
 
 
-train_dataset = voxelized_data.VoxelizedDataset('train', voxelized_pointcloud= args.pointcloud, pointcloud_samples= args.pc_samples, res=args.res, sample_distribution=args.sample_distribution,
+train_dataset = voxelized_data.VoxelizedDataset('train', voxelized_pointcloud= args.pointcloud, pointcloud_samples= args.pc_samples, data_path=args.input_dir_train, res=args.res, sample_distribution=args.sample_distribution,
                                           sample_sigmas=args.sample_sigmas ,num_sample_points=50000, batch_size=args.batch_size, num_workers=30)
 
-val_dataset = voxelized_data.VoxelizedDataset('val', voxelized_pointcloud= args.pointcloud , pointcloud_samples= args.pc_samples, res=args.res, sample_distribution=args.sample_distribution,
+val_dataset = voxelized_data.VoxelizedDataset('val', voxelized_pointcloud= args.pointcloud , pointcloud_samples= args.pc_samples, data_path=args.input_dir_val, res=args.res, sample_distribution=args.sample_distribution,
                                           sample_sigmas=args.sample_sigmas ,num_sample_points=50000, batch_size=args.batch_size, num_workers=30)
 
 
 
-exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}'.format(  'PC' + str(args.pc_samples) if args.pointcloud else 'Voxels',
+exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}_{}'.format(  'PC' + str(args.pc_samples) if args.pointcloud else 'Voxels',
                                     ''.join(str(e)+'_' for e in args.sample_distribution),
                                        ''.join(str(e) +'_'for e in args.sample_sigmas),
-                                                                args.res,args.model)
+                                                                args.res,args.model,args.name)
 
 DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
 print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
 Device = ptUtils.setDevice(MainGPUID)
 
 trainer = training.Trainer(net,Device,train_dataset, val_dataset,exp_name, optimizer=args.optimizer)
-<<<<<<< HEAD
-trainer.train_model(200)
-=======
-trainer.train_model(20)
->>>>>>> 4f8fb2b62dc642cb7b668955305fb5a6c3f9e67b
+trainer.train_model(args.epochs)

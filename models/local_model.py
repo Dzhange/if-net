@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 # ShapeNet Voxel Super-Resolution --------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------
-GPUnum = 3
+GPUnum = 4
 class ShapeNet32Vox(nn.Module):
 
     def __init__(self, hidden_dim=256):

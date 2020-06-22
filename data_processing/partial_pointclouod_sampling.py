@@ -17,7 +17,7 @@ import objloader
 import skimage.io as sio
 import time
 
-ROOT = 'shapenet/data/'
+ROOT = None
 # This file takes uni-scaled isosurface mesh as input, and output a sampled point,
 # directly from mesh. 
 # Here we use the pyRender to perform depth culling，get partial point cloud.
@@ -43,11 +43,14 @@ def voxelized_pointcloud_sampling(path):
         # set up mesh buffers in cuda
         context = render.SetMesh(V, F)
         
+        # cam2world = np.array([[ 0.85408425,  0.31617427, -0.375678  ,  0.56351697 * 2],
+        #     [ 0.        , -0.72227067, -0.60786998,  0.91180497 * 2],
+        #     [-0.52013469,  0.51917219, -0.61688   ,  0.92532003 * 2+3],
+        #     [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)
         cam2world = np.array([[ 0.85408425,  0.31617427, -0.375678  ,  0.56351697 * 2],
             [ 0.        , -0.72227067, -0.60786998,  0.91180497 * 2],
-            [-0.52013469,  0.51917219, -0.61688   ,  0.92532003 * 2+3],
+            [-0.52013469,  0.51917219, -0.61688   ,  0.92532003 * 2],
             [ 0.        ,  0.        ,  0.        ,  1.        ]], dtype=np.float32)
-
         world2cam = np.linalg.inv(cam2world).astype('float32')
         # the actual rendering process
         render.render(context, world2cam)
@@ -131,18 +134,18 @@ if __name__ == '__main__':
     parser.add_argument('-res', type=int)
     parser.add_argument('-num_points', type=int)
     parser.add_argument('-write_over',type=bool)
+    parser.add_argument('-input-dir',type=str,default='shapenet/data/')
     # parser.add_argument('-sigma', type=float)
 
     args = parser.parse_args()
-    MIN_NUM = 99999
     bb_min = -0.5
     bb_max = 0.5
-    min_num = 999999
     grid_points = iw.create_grid_points_from_bounds(bb_min, bb_max, args.res)
     kdtree = KDTree(grid_points)
 
-    p = Pool(mp.cpu_count())
-    paths = glob(ROOT + '/*/*/')
+    p = Pool(1)
+    # p = Pool(mp.cpu_count())
+    paths = glob(os.path.join(args.input_dir, '*/'))
     # enabeling to run te script multiple times in parallel: shuffling the data
     random.shuffle(paths)
     p.map(voxelized_pointcloud_sampling, paths)

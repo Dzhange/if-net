@@ -10,22 +10,27 @@ import argparse
 import random
 import traceback
 
-ROOT = 'shapenet/data/'
+ROOT = None
 
 def voxelized_pointcloud_sampling(path):
     try:
         out_file = path + '/voxelized_point_cloud_{}res_{}points.npz'.format(args.res, args.num_points)
 
         if os.path.exists(out_file):
-            print('File exists. Done.')
-            return
+            if args.write_over:
+                print("Overwriting ",out_file)
+            else:
+                print("file existed: ",out_file,", skip.")
+                return
+
         off_path = path + '/isosurf_scaled.off'
 
 
         mesh = trimesh.load(off_path)
         point_cloud = mesh.sample(args.num_points)
         # print(point_cloud.shape)
-        point_cloud_noise = point_cloud + 0.01 * 
+        if args.noise:
+            point_cloud = point_cloud + 0.01 * np.random.randn(point_cloud.shape[0], 3)
         occupancies = np.zeros(len(grid_points), dtype=np.int8)
         
         _, idx = kdtree.query(point_cloud)
@@ -33,10 +38,10 @@ def voxelized_pointcloud_sampling(path):
 
         compressed_occupancies = np.packbits(occupancies)
 
-        # np.savez(out_file, point_cloud=point_cloud, 
-        #   compressed_occupancies = compressed_occupancies, 
-        #   bb_min = bb_min, bb_max = bb_max, 
-        #   res = args.res)
+        np.savez(out_file, point_cloud=point_cloud, 
+          compressed_occupancies = compressed_occupancies, 
+          bb_min = bb_min, bb_max = bb_max, 
+          res = args.res)
 
         print('Finished {}'.format(path))
 
@@ -50,7 +55,9 @@ if __name__ == '__main__':
 
     parser.add_argument('-res', type=int)
     parser.add_argument('-num_points', type=int)
-
+    parser.add_argument('-noise',type=bool,default=False)
+    parser.add_argument('-write_over',type=bool,default=False)
+    parser.add_argument('-input-dir',type=str,default='shapenet/data/')
     args = parser.parse_args()
 
     bb_min = -0.5
@@ -60,7 +67,7 @@ if __name__ == '__main__':
     kdtree = KDTree(grid_points)
 
     p = Pool(mp.cpu_count())
-    paths = glob(ROOT + '/*/*/')
+    paths = glob(os.path.join(args.input_dir, '*/*/'))
 
     # enabeling to run te script multiple times in parallel: shuffling the data
     random.shuffle(paths)
