@@ -61,7 +61,7 @@ class Generator(object):
         vertices -= 1
 
         #rescale to original scale
-        step = (self.max - self.min) / (self.resolution - 1)
+        step = (self.max - self.min) / (self.resolution - 1)   
         vertices = np.multiply(vertices, step)
         vertices += [self.min, self.min, self.min]
 

@@ -56,5 +56,7 @@ if __name__ == '__main__':
     paths = glob(ROOT + '/*/*/')
 
     # enabeling to run te script multiple times in parallel: shuffling the data
-    random.shuffle(paths)
-    p.map(voxelized_pointcloud_sampling, paths)
+    # random.shuffle(paths)
+    # p.map(voxelized_pointcloud_sampling, paths)
+
+    

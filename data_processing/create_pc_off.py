@@ -42,5 +42,6 @@ if __name__ == '__main__':
 
     ROOT = 'shapenet/data'
 
-    p = Pool(mp.cpu_count())
-    p.map(create_voxel_off, glob.glob(ROOT + '/*/*/'))
+    create_voxel_off("/ZG/frame_00000000_view_00_test")
+    # p = Pool(mp.cpu_count())
+    # p.map(create_voxel_off, glob.glob(ROOT + '/*/*/'))

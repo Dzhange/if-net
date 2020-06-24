@@ -53,6 +53,9 @@ if __name__ == '__main__':
 
     sample_num = 100000
 
-
-    p = Pool(mp.cpu_count())
-    p.map(boundary_sampling, glob.glob( ROOT + '/*/*/'))
+    test_path = "/ZG/frame_00000000_view_00_test"
+    
+    
+    boundary_sampling(test_path)
+    # p = Pool(mp.cpu_count())
+    # p.map(boundary_sampling, glob.glob( ROOT + '/*/*/'))
