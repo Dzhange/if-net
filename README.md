@@ -159,6 +159,34 @@ where `-sigma` specifies the standard deviation of the normally distributed disp
 
 Similar to above in Shapenet case, only difference is you have to specify the input folder.
 
+
+## NOCS data preparation
+
+### Generate Predicted NOCS Map
+
+For the whole Pipeline, we take RGB images as input and generate Mesh as final output, First we need to nr-nocs part to generate NOCS map as input as point cloud for the following single view reconstrution. 
+
+To do this, just run
+`python data_processing/NOCS_prepare.py --nocs-dir NOCS_DIR --output-dir OUTPUT_DIR --expt-name EXPERIMENT_NAME --nrnocs-res NOCS_RESULT_ROOT --mode TRAIN OR VAL --write-over IF_OVERWRITE`   
+
+The `nocs-dir` is the working directory of nrnocs so we can call the function; `output-dir` is the taeget directory to store the processed data; `expt-name` specifies which model you want to use. YOU MAY NEED TO CHANGE THE `base_command` in `NOCS_prepare.py` IF USING DIFFERENT MODELS.;`mode` specifis generate data from which mode. Typically, this 2 mode corresponds to that in `hand_eig_data_set`, as the index of subsets would change in different version of dataset, you may need MANUALLY CHANGE `SUBSETS_IDX` in `NOCS_prepare.py`; `nrnocs-res` is the `output-dir` in NOCS training command.
+
+### Generate GT voxels and sampeld point cloud input
+
+run 
+`python data_processing/NOCS_pointcloud_sampling --res RESOLUTION --num-points NUMBER_OF_SAMPLED POINTS--input-dir DIR_GENERATED_DATASET`
+
+`input-dir` is the `output-dir` in previous step.
+
+### Boudray Sampling
+
+run 
+`python data_processing/boundary_sampling --input-dir DIR_GENERATED_DATASET`
+
+### FILter and Visualization
+
+Same as Shapenet
+
 ## Training
 The training of IF-Nets is started running
 ```

@@ -24,8 +24,8 @@ parser.add_argument('-o','--optimizer' , default='Adam', type=str)
 parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 parser.add_argument('-name', default='', type=str)
 parser.add_argument('-epochs', default=200, type=int)
-parser.add_argument('-input-dir-train', default='shapenet/data/train', type=str)
-parser.add_argument('-input-dir-val', default='shapenet/data/val', type=str)
+parser.add_argument('-input-dir-train', default='/ZG/nocs_data_ifnet/train', type=str)
+parser.add_argument('-input-dir-val', default='/ZG/nocs_data_ifnet/val', type=str)
 
 try:
     args = parser.parse_args()

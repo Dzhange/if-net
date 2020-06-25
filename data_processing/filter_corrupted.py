@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(
 )
 parser.add_argument('-file', type=str)
 parser.add_argument('-delete', action='store_true')
-parser.add_argument('-input-dir',type=str,default='shapenet/data/')
+parser.add_argument('-input-dir',type=str,default='/ZG/nocs_data_ifnet/val')
 parser.set_defaults(delete=False)
 
 args = parser.parse_args()
@@ -32,7 +32,7 @@ delete = args.delete
 # ROOT = 'shapenet/data/'
 
 p = Pool(mp.cpu_count())
-p.map(filter, glob.glob(os.path.join(args.input_dir, '*/*/')))
+p.map(filter, glob.glob(os.path.join(args.input_dir, '*')))
 
 def update_split():
 

@@ -113,11 +113,11 @@ if __name__ == '__main__':
         description='Run point cloud sampling'
     )
 
-    parser.add_argument('-res', type=int)
-    parser.add_argument('-num-points', type=int)
-    parser.add_argument('-noise',type=bool,default=False)
-    parser.add_argument('-write-over',type=bool,default=False)
-    parser.add_argument('-input-dir',type=str,default='shapenet/data/')
+    parser.add_argument('--res', type=int, default=128)
+    parser.add_argument('--num-points', type=int,default=3000)
+    parser.add_argument('--noise',type=bool,default=False)
+    parser.add_argument('--write-over',type=bool,default=False)
+    parser.add_argument('--input-dir',type=str,default='/ZG/nocs_data_ifnet/val')
     args = parser.parse_args()
 
     bb_min = -0.5
@@ -128,18 +128,19 @@ if __name__ == '__main__':
 
     sample_num = args.num_points
 
-    test_path = "/ZG/frame_00000000_view_00_test"
+    # test_path = "/ZG/frame_00000000_view_00_test"
     
     
-    scale_sample(test_path)
+    # scale_sample(test_path)
     # scale(test_path)
 
     # nocs_pointcloud_sampling(test_path)
     
     
-    # p = Pool(mp.cpu_count())
-    # paths = glob(os.path.join(args.input_dir, '*/*/'))
+    p = Pool(mp.cpu_count())
+    paths = glob(os.path.join(args.input_dir, '*'))
 
     # enabeling to run te script multiple times in parallel: shuffling the data
     # random.shuffle(paths)
-    # p.map(voxelized_pointcloud_sampling, paths)
+    # print(paths,len(paths))
+    p.map(scale_sample, paths)

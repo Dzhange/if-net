@@ -45,17 +45,18 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='Run boundary sampling'
     )
-    parser.add_argument('-sigma', type=float)
+    parser.add_argument('-sigma', type=float, default=0.1)
     parser.add_argument('-write_over',type=bool,default=True)
+    parser.add_argument('-input-dir',type=str,default='/ZG/nocs_data_ifnet/val')
     
     args = parser.parse_args()
 
 
     sample_num = 100000
 
-    test_path = "/ZG/frame_00000000_view_00_test"
+    # test_path = "/ZG/frame_00000000_view_00_test"
+    # boundary_sampling(test_path)
+    p = Pool(mp.cpu_count() >> 2)
+    paths = glob.glob(os.path.join( args.input_dir , '*'))
     
-    
-    boundary_sampling(test_path)
-    # p = Pool(mp.cpu_count())
-    # p.map(boundary_sampling, glob.glob( ROOT + '/*/*/'))
+    p.map(boundary_sampling, paths)
