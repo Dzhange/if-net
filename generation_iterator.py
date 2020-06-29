@@ -29,14 +29,14 @@ def gen_iterator(out_path, dataset, gen_p):
 
         path = os.path.normpath(data['path'][0])
         export_path = out_path + '/generation/{}/{}/'.format(path.split(os.sep)[-2], path.split(os.sep)[-1])
-
+        # print(export_path)
 
         if os.path.exists(export_path):
             print('Path exists - skip! {}'.format(export_path))
             continue
 
         try:
-            if len(data_tupels) > 20:
+            if len(data_tupels) > 10:
                 create_meshes(data_tupels)
                 data_tupels = []
             logits = gen.generate_mesh(data)
@@ -68,7 +68,7 @@ def save_mesh(data_tupel):
 
     if not os.path.exists(export_path):
         os.makedirs(export_path)
-
+    print(export_path)
     mesh.export(export_path + 'surface_reconstruction.off')
 
 def create_meshes(data_tupels):

@@ -296,7 +296,7 @@ class ShapeNetPoints(nn.Module):
 class SVR(nn.Module):
 
 
-    def __init__(self, hidden_dim=256):
+    def __init__(self,gpu_idx, hidden_dim=256):
         super(SVR, self).__init__()
 
         self.conv_in = nn.Conv3d(1, 16, 3, padding=1, padding_mode='replicate')  # out: 256 ->m.p. 128
@@ -337,7 +337,7 @@ class SVR(nn.Module):
                 input[x] = y * displacment
                 displacments.append(input)
 
-        self.displacments = torch.Tensor(displacments).cuda(GPUnum)
+        self.displacments = torch.Tensor(displacments).cuda(gpu_idx)
 
     def forward(self, p, x):
         x = x.unsqueeze(1)

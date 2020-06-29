@@ -1,3 +1,4 @@
+
 import os,sys
 import glob
 import multiprocessing as mp
@@ -11,7 +12,9 @@ pred_res_path = None
 output_dir = None
 expt_name = None
 write_over = False
+test_input_dir = None
 mode = None
+merge = False
 
 def find_frame_num(path):
     return re.findall(r'%s(\d+)' % "frame_",path)[0]
@@ -32,13 +35,17 @@ def create_folders_proc(frame):
             else:
                 continue
         print("working on {}".format(frame_and_view))
-        cur_files = glob.glob(os.path.join(pred_res_path, frame_and_view) + '*')
+    
+    
+        cur_fixs = ['_color00.png','_color00_nox00_01pred.png','_color00_nox00_03predmask.png']
         os.mkdir(sub_dir)
-        for f in cur_files:
-            f_name = os.path.basename(f)
+        for fix in cur_fixs:
+            # f_name = os.path.basename(f)
+            f_name = frame_and_view + fix
+            old_f = os.path.join(pred_res_path,f_name)
             new_f = os.path.join(sub_dir,f_name)
-            if not os.path.exists(new_f):
-                shutil.copy(f,new_f)
+            if os.path.exists(old_f) and not os.path.exists(new_f):
+                shutil.copy(old_f,new_f)
                 # print("copied {} to {}".format(f,new_f))
         
             # /ZG/meshedNOCS/hand_rig_dataset_v3/train/0000/frame_00000000_NOCS_mesh.obj
@@ -46,6 +53,12 @@ def create_folders_proc(frame):
         nocs_path = os.path.join(pred_res_path,nocs_name)
         new_nocs_path = os.path.join(sub_dir, nocs_name)
         shutil.copy(nocs_path,new_nocs_path)
+
+        for suffix in ["_nox00.png","_nox01.png","_pnnocs00.png","_pnnocs01.png"]:
+            gt_name = frame_and_view + suffix
+            gt_path= os.path.join(test_input_dir,str(int(frame) // 100).zfill(4),gt_name)
+            new_gt_path = os.path.join(sub_dir,gt_name)
+            shutil.copy(gt_path,new_gt_path)
 
 def create_folders():
     
@@ -60,11 +73,12 @@ def create_folders():
     all_frames = list(dict.fromkeys(all_frames))
     all_frames.sort()
     
-    p = Pool(mp.cpu_count() >> 3)
+    p = Pool(mp.cpu_count() >> 2)
     p.map(create_folders_proc, all_frames)
 
-
-def genPredResults(nocs_dir,test_input_dir,nrnocs_res_dir):
+# Generates the predicted results into nrnocs Output Dir
+# seperated into train and val
+def genPredResults(nocs_dir,test_input_dir,nrnocs_res_dir,expt_name):
     
     os.chdir(nocs_dir)
     
@@ -85,17 +99,19 @@ def genPredResults(nocs_dir,test_input_dir,nrnocs_res_dir):
         --data-limit 30 \
         --val-data-limit 5 \
         --downscale 2 \
-        --input-dir ../../meshedNOCS --gpu 1\
+         --gpu 2\
         --batch-size 2 \
         --expt-name {}\
         --if-net True\
-        --test-input {}".format(nrnocs_output_dir,expt_name, cur_input)
-
+        --test-input {}".format(nrnocs_res_dir,expt_name, cur_input)
+        
+        # --input-dir ../../meshedNOCS\
         os.system(base_command)
 
 
     # move to train / val subdir
-    os.mkdir(pred_res_path)
+    if not os.path.exists(pred_res_path):
+        os.mkdir(pred_res_path)
     cur_res_path = os.path.join(args.nrnocs_res, expt_name,"TestResults","frame_00*")
     os.system('mv {} {}'.format(cur_res_path, pred_res_path))
     
@@ -106,27 +122,35 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--write-over',default=False,type=bool,help="Overwrite previous results if set to True")
-    parser.add_argument('--nrnocs-res',default='../nrnocs_output/', help='Function as Input Dir. Provide the directory while the prediction result of nrnocs is stored')
-    parser.add_argument('--expt-name',default="NRNOCS_NOX00_b2_d20_wBG", help='the expt name of target model')
-    parser.add_argument('--output-dir',default='/ZG/nocs_data_ifnet' ,help='Provide the output directory where the processed Model')
+    parser.add_argument('--nrnocs-res',default='/ZG/nrnocs_output/', help='Function as Input Dir. Provide the directory while the prediction result of nrnocs is stored')
+    parser.add_argument('--expt-name', nargs='+',default="NRNOCS_NOX00_b2_d20_wBG", help='the expt name of target model,if more than one, we merge all results for the same target')
+    parser.add_argument('--output-dir',default='/ZG/nocs_gt_ifnet' ,help='Provide the output directory where the processed Model')
     parser.add_argument('--nocs-dir',default='/ZG/CatRecon/nrnocs', help='the working directory of nrnocs')
     parser.add_argument('--orig-dataset',default='/ZG/meshedNOCS/hand_rig_dataset_v3/', help='the root of dataset as input for nocs')
     parser.add_argument('--mode', default='train', type=str)
 
     # expt_name = "NR-NOCS_10percent_BN_batch2" #need 2 GPU
     args = parser.parse_args()
-
+    
     mode = args.mode
-    expt_name =  args.expt_name
     write_over = args.write_over
-    pred_res_path = os.path.join(args.nrnocs_res, expt_name,"TestResults/{}".format(mode))
     output_dir = os.path.join(args.output_dir, mode)
     test_input_dir = os.path.join(args.orig_dataset, args.mode)
     
 
+    # Merge the outputs of multiple model(nox00, nox01), get a full view model
+    
+    if len(args.expt_name) > 1:
+        merge = True
+    expt_name = args.expt_name
+
+    pred_res_path = os.path.join(args.nrnocs_res, expt_name,"TestResults/{}".format(mode))
+    # pred_res_path = os.path.join(args.nrnocs_res, mode)
+
+    
+    
     if not os.path.exists(output_dir):
         os.mkdir(output_dir)
 
-    
-    genPredResults(args.nocs_dir,test_input_dir,args.nrnocs_res)
+    genPredResults(args.nocs_dir,test_input_dir,args.nrnocs_res,expt_name)
     create_folders()

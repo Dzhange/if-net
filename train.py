@@ -24,8 +24,8 @@ parser.add_argument('-o','--optimizer' , default='Adam', type=str)
 parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 parser.add_argument('-name', default='', type=str)
 parser.add_argument('-epochs', default=200, type=int)
-parser.add_argument('-input-dir-train', default='/ZG/nocs_data_ifnet/train', type=str)
-parser.add_argument('-input-dir-val', default='/ZG/nocs_data_ifnet/val', type=str)
+parser.add_argument('-input-dir-train', default='/ZG/nocs_gt_ifnet/train', type=str)
+parser.add_argument('-input-dir-val', default='/ZG/nocs_gt_ifnet/val', type=str)
 
 try:
     args = parser.parse_args()
@@ -33,6 +33,9 @@ except:
     args = parser.parse_known_args()[0]
 
 
+DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
+print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
+Device = ptUtils.setDevice(MainGPUID)
 if args.model ==  'ShapeNet32Vox':
     net = model.ShapeNet32Vox()
 
@@ -43,7 +46,7 @@ if args.model == 'ShapeNetPoints':
     net = model.ShapeNetPoints()
 
 if args.model == 'SVR':
-    net = model.SVR()
+    net = model.SVR(gpu_idx=MainGPUID)
 
 
 
@@ -60,9 +63,7 @@ exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}_{}'.format(  'PC' + str(args.pc_samples)
                                        ''.join(str(e) +'_'for e in args.sample_sigmas),
                                                                 args.res,args.model,args.name)
 
-DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
-print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
-Device = ptUtils.setDevice(MainGPUID)
+
 
 trainer = training.Trainer(net,Device,train_dataset, val_dataset,exp_name, optimizer=args.optimizer)
 trainer.train_model(args.epochs)

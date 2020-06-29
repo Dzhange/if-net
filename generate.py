@@ -27,6 +27,7 @@ parser.add_argument('-batch_points', default=1000000, type=int)
 parser.add_argument('-m','--model' , default='LocNet', type=str)
 parser.add_argument('-gpu', default=0, type=int, choices=range(-1,8), nargs='+')
 parser.add_argument('-name',default='',type=str)
+parser.add_argument('-input-dir', default='/ZG/nocs_data_ifnet/val', type=str)
 
 args = parser.parse_args()
 
@@ -35,6 +36,10 @@ try:
 except:
     args = parser.parse_known_args()[0]
 
+
+DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
+print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
+Device = ptUtils.setDevice(MainGPUID)
 
 if args.model ==  'ShapeNet32Vox':
     net = model.ShapeNet32Vox()
@@ -46,10 +51,10 @@ if args.model == 'ShapeNetPoints':
     net = model.ShapeNetPoints()
 
 if args.model == 'SVR':
-    net = model.SVR()
+    net = model.SVR(gpu_idx=MainGPUID)
 
 
-dataset = voxelized_data.VoxelizedDataset(args.mode, voxelized_pointcloud= args.pointcloud,train=False, pointcloud_samples= args.pc_samples, res=args.res, sample_distribution=args.sample_distribution,
+dataset = voxelized_data.VoxelizedDataset(args.mode, voxelized_pointcloud= args.pointcloud,train=False, pointcloud_samples= args.pc_samples, data_path=args.input_dir,res=args.res, sample_distribution=args.sample_distribution,
                                           sample_sigmas=args.sample_sigmas ,num_sample_points=100, batch_size=1, num_workers=0)
 
 
@@ -58,9 +63,7 @@ exp_name = 'i{}_dist-{}sigmas-{}v{}_m{}_{}'.format(  'PC' + str(args.pc_samples)
                                        ''.join(str(e) +'_'for e in args.sample_sigmas),
                                                                 args.res,args.model, args.name)
 
-DeviceList, MainGPUID = ptUtils.setupGPUs(args.gpu)
-print('[ INFO ]: Using {} GPUs with IDs {}'.format(len(DeviceList), DeviceList))
-Device = ptUtils.setDevice(MainGPUID)
+
 
 gen = Generator(net,0.5, exp_name, checkpoint=args.checkpoint, device=Device, resolution=args.retrieval_res, batch_points=args.batch_points)
 

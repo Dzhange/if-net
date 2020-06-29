@@ -35,13 +35,14 @@ if __name__ == '__main__':
         description='Create off visualization from point cloud.'
     )
 
-    parser.add_argument('-res', type=int)
-    parser.add_argument('-num_points', type=int)
+    parser.add_argument('-res', type=int,default=128)
+    parser.add_argument('-num_points', type=int,default=30000)
+    parser.add_argument('-input', type=str,default='/ZG/nocs_gt_ifnet/train')
 
     args = parser.parse_args()
 
-    ROOT = 'shapenet/data'
+    ROOT = args.input
 
-    create_voxel_off("/ZG/frame_00000000_view_00_test")
-    # p = Pool(mp.cpu_count())
-    # p.map(create_voxel_off, glob.glob(ROOT + '/*/*/'))
+    # create_voxel_off("/ZG/frame_00000000_view_00")
+    p = Pool(mp.cpu_count()>>2)
+    p.map(create_voxel_off, glob.glob(os.path.join(ROOT , '*')))

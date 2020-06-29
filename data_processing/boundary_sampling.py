@@ -47,8 +47,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('-sigma', type=float, default=0.1)
     parser.add_argument('-write_over',type=bool,default=True)
-    parser.add_argument('-input-dir',type=str,default='/ZG/nocs_data_ifnet/val')
-    
+    parser.add_argument('-input-dir',type=str,default='/ZG/nocs_gt_ifnet/')
+    parser.add_argument('-mode',type=str,default='train')
     args = parser.parse_args()
 
 
@@ -57,6 +57,6 @@ if __name__ == '__main__':
     # test_path = "/ZG/frame_00000000_view_00_test"
     # boundary_sampling(test_path)
     p = Pool(mp.cpu_count() >> 2)
-    paths = glob.glob(os.path.join( args.input_dir , '*'))
+    paths = glob.glob(os.path.join( args.input_dir,args.mode,'*'))
     
     p.map(boundary_sampling, paths)

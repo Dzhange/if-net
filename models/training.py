@@ -49,7 +49,7 @@ class Trainer(object):
         occ = batch.get('occupancies').to(device)
         inputs = batch.get('inputs').to(device)
 
-
+#
         # General points
         logits = self.model(p,inputs)
         loss_i = F.binary_cross_entropy_with_logits(
@@ -82,14 +82,16 @@ class Trainer(object):
                         os.remove(path)
                     np.save(self.exp_path + 'val_min={}'.format(epoch),[epoch,val_loss])
 
-
                 self.writer.add_scalar('val loss batch avg', val_loss, epoch)
-
+                     
+            
 
             for batch_id,batch in enumerate(train_data_loader):
                 loss = self.train_step(batch)
                 if batch_id % 20 == 0:
                     print("Current loss: {}".format(loss))
+                    val_loss = self.compute_val_loss()
+                    print("Val loss is {}".format(val_loss))
                 sum_loss += loss
 
 

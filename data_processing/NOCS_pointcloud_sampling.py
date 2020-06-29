@@ -11,30 +11,45 @@ import random
 import traceback
 import cv2
 
-ROOT = None
 sample_num = None
+GT = False
+both_sides = False # use 2 views(00,01) of ground truth as input
 
 def find_frame_num(path):
     return re.findall(r'%s(\d+)' % "frame_",path)[0]
 
 def NOCS_point_sampling(path):
-    nocs_path = glob(os.path.join(path, '*nox00_01pred.png'))
-    # mask_path = glob(os.path.join(path, '*predmask.png'))
-    if len(nocs_path) > 1:
-        print("[ERROR] more than one input")
-        print(nocs_path)
-    nocs_path = nocs_path[0]
-    # mask_path = mask_path[0]
-    nocs = cv2.imread(nocs_path)
-    nocs = cv2.cvtColor(nocs,cv2.COLOR_BGR2RGB)
     
-    valid_idx = np.where(np.all(nocs != [255, 255, 255], axis=-1)) # Only white BG
-    num_valid = valid_idx[0].shape[0]
-    # for current use we choose uniform sample
-    sampled_idx = (valid_idx[0][np.random.choice(num_valid,sample_num,replace=False)] ,
-                    valid_idx[1][np.random.choice(num_valid,sample_num,replace=False)])
-    sample_points = nocs[sampled_idx[0], sampled_idx[1]] / 255
-    return sample_points
+    nocs_path = []
+    frame_view = os.path.basename(path)
+    if GT:
+        nocs_path.append(os.path.join(path, frame_view+'_nox00.png'))
+        if both_sides: 
+            nocs_path.append(os.path.join(path, frame_view+'_nox01.png'))
+    else:
+        nocs_path = glob(os.path.join(path, '*nox00_01pred.png'))
+        if both_sides: 
+            nocs_path = glob(os.path.join(path, '*nox00_01pred.png'))
+
+    all_points = None
+    for p in nocs_path:
+        nocs = cv2.imread(p)
+        nocs = cv2.cvtColor(nocs,cv2.COLOR_BGR2RGB)
+        
+        valid_idx = np.where(np.all(nocs != [255, 255, 255], axis=-1)) # Only white BG
+        num_valid = valid_idx[0].shape[0]
+        
+        randomIdx = np.random.choice(num_valid,sample_num // len(nocs_path),replace=False)
+        # for current use we choose uniform sample
+        sampled_idx = (valid_idx[0][randomIdx], valid_idx[1][randomIdx])
+        sample_points = nocs[sampled_idx[0], sampled_idx[1]] / 255
+        
+        if all_points is None:
+            all_points = sample_points
+        else:
+            all_points = np.concatenate((all_points, sample_points), axis=0)
+        print(all_points.shape)
+    return all_points
 
 def nocs_pointcloud_sampling(path,translation,scale):
     try:
@@ -77,6 +92,7 @@ def scale_nocs(path):
     if os.path.exists(os.path.join(path,target_name)):
         if args.write_over:
             print('overwrite ', os.path.join(path,target_name))
+            
         else:
             print('File exists. Done.')
             return
@@ -101,12 +117,9 @@ def scale_nocs(path):
 
     return translation, scale
 
-
-# First we 
 def scale_sample(path):
     translation, scale = scale_nocs(path)
     nocs_pointcloud_sampling(path,translation,scale)
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -114,10 +127,14 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--res', type=int, default=128)
-    parser.add_argument('--num-points', type=int,default=3000)
+    parser.add_argument('--num-points', type=int,default=30000)
     parser.add_argument('--noise',type=bool,default=False)
     parser.add_argument('--write-over',type=bool,default=False)
-    parser.add_argument('--input-dir',type=str,default='/ZG/nocs_data_ifnet/val')
+    parser.add_argument('--GT',type=bool,default=False)
+    parser.add_argument('--mode',type=str,default='train')
+    parser.add_argument('--input-dir',type=str,default='/ZG/nocs_gt_ifnet/')
+    parser.add_argument('--both_sides',type=bool,default=True)
+    
     args = parser.parse_args()
 
     bb_min = -0.5
@@ -127,20 +144,18 @@ if __name__ == '__main__':
     kdtree = KDTree(grid_points)
 
     sample_num = args.num_points
+    GT = args.GT
+    both_sides = args.both_sides
 
-    # test_path = "/ZG/frame_00000000_view_00_test"
-    
-    
-    # scale_sample(test_path)
-    # scale(test_path)
-
-    # nocs_pointcloud_sampling(test_path)
-    
-    
-    p = Pool(mp.cpu_count())
-    paths = glob(os.path.join(args.input_dir, '*'))
-
-    # enabeling to run te script multiple times in parallel: shuffling the data
-    # random.shuffle(paths)
-    # print(paths,len(paths))
-    p.map(scale_sample, paths)
+    if 0:
+        test_path = "/ZG/frame_00000000_view_00"
+        scale_sample(test_path)
+        # scale(test_path)
+        # nocs_pointcloud_sampling(test_path)
+    else:
+        p = Pool(mp.cpu_count()>>3)
+        paths = glob(os.path.join(args.input_dir,args.mode, '*'))
+        # enabeling to run te script multiple times in parallel: shuffling the data
+        # random.shuffle(paths)
+        print(paths,len(paths))
+        p.map(scale_sample, paths)
